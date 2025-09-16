@@ -1,0 +1,19 @@
+name: BeaconGUI
+main: Renz\Beacon\Main
+version: 1.0.0
+api: 5.20.0
+author: Renz
+description: Complete Beacon GUI implementation with 100% vanilla Minecraft features
+website: https://github.com/RenzMc/BeaconGUI
+commands:
+  beacon:
+    description: Beacon management commands
+    usage: /beacon <reload|status|info>
+    permission: beacon.admin
+permissions:
+  beacon.use:
+    description: Allow players to use beacon GUIs
+    default: true
+  beacon.admin:
+    description: Allow players to manage beacon configurations
+    default: op
