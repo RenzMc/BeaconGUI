@@ -13,7 +13,7 @@ A PocketMine-MP plugin that implements a GUI for Beacon blocks.
 
 ## Requirements
 
-- PocketMine-MP API 5.32.0+
+- PocketMine-MP API 5.20.0
 - PHP 8.0+
 
 ## Installation
@@ -79,23 +79,6 @@ A PocketMine-MP plugin that implements a GUI for Beacon blocks.
 - `beacon.use` - Allow players to use beacon GUIs (default: true)
 - `beacon.admin` - Allow players to manage beacon configurations (default: op)
 
-## Changes in Version 1.0.2
-
-- Added proper ContainerOpenPacket with WindowTypes::BEACON for correct GUI display
-- Fixed beacon inventory handling to match vanilla Minecraft behavior
-- Improved player join event handling for beacon inventory callbacks
-
-## Changes in Version 1.0.1
-
-- Updated API version to 5.32.0
-- Fixed typo in BeaconPyramidCalculator.php (EMELARD → EMERALD)
-- Ensured compatibility with the latest PocketMine-MP version
-
 ## License
 
 This plugin is licensed under the GPL-3.0 License. See the LICENSE file for details.
-
-## Credits
-
-- Author: Renz
-- PocketMine-MP Team for the base beacon implementation

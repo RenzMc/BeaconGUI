@@ -132,7 +132,7 @@ class BeaconPyramidCalculator {
         ];
         
         foreach ($validBlocks as $validBlock) {
-            if ($block->isSameType($validBlock)) {
+            if ($block->hasSameTypeId($validBlock)) {
                 return true;
             }
         }

@@ -16,99 +16,129 @@ use Renz\Beacon\utils\BeaconPyramidCalculator;
 /**
  * Task to periodically apply beacon effects to players and update beacon beams
  */
-class BeaconEffectTask extends Task {
-    
+class BeaconEffectTask extends Task
+{
     private Server $server;
     private Config $config;
     private array $beaconCache = [];
     private int $lastCacheClear = 0;
-    
+
     /**
      * BeaconEffectTask constructor.
-     * 
+     *
      * @param Server $server
      * @param Config $config
      */
-    public function __construct(Server $server, Config $config) {
+    public function __construct(Server $server, Config $config)
+    {
         $this->server = $server;
         $this->config = $config;
     }
-    
+
     /**
      * Execute the task
      */
-    public function onRun(): void {
+    public function onRun(): void
+    {
         // Clear cache periodically
         $currentTime = time();
-        $cacheTimeout = $this->config->getNested('performance.cache-timeout', 30);
-        
+        $cacheTimeout = $this->config->getNested(
+            "performance.cache-timeout",
+            30,
+        );
+
         if ($currentTime - $this->lastCacheClear > $cacheTimeout) {
             $this->beaconCache = [];
             $this->lastCacheClear = $currentTime;
         }
-        
+
         // Process all loaded worlds with performance limiting
-        $maxBeaconsPerTick = $this->config->getNested('performance.max-beacons-per-tick', 10);
+        $maxBeaconsPerTick = $this->config->getNested(
+            "performance.max-beacons-per-tick",
+            10,
+        );
         $processedBeacons = 0;
-        
+
         foreach ($this->server->getWorldManager()->getWorlds() as $world) {
             if ($processedBeacons >= $maxBeaconsPerTick) {
                 break;
             }
-            $processedBeacons += $this->processBeaconsInWorld($world, $maxBeaconsPerTick - $processedBeacons);
+            $processedBeacons += $this->processBeaconsInWorld(
+                $world,
+                $maxBeaconsPerTick - $processedBeacons,
+            );
         }
     }
-    
+
     /**
      * Process all beacons in a world
-     * 
+     *
      * @param World $world
      * @param int $maxBeacons Maximum beacons to process
      * @return int Number of beacons processed
      */
-    private function processBeaconsInWorld(World $world, int $maxBeacons): int {
+    private function processBeaconsInWorld(World $world, int $maxBeacons): int
+    {
         $processed = 0;
-        
-        // Get all beacon tiles in the world
-        foreach ($world->getTiles() as $tile) {
+
+        // Iterate only loaded chunks (safer than trying to scan unloaded chunks)
+        foreach ($world->getLoadedChunks() as $chunk) {
+            // chunks may be represented as Chunk objects; ensure we have a chunk with tiles
             if ($processed >= $maxBeacons) {
                 break;
             }
-            
-            if ($tile instanceof BeaconTile) {
-                $this->processBeacon($tile);
-                $processed++;
+
+            // getTiles() exists on Chunk (returns array of Tile objects)
+            foreach ($chunk->getTiles() as $tile) {
+                if ($processed >= $maxBeacons) {
+                    break;
+                }
+
+                if ($tile instanceof BeaconTile) {
+                    $this->processBeacon($tile);
+                    $processed++;
+                }
             }
         }
-        
+
         return $processed;
     }
-    
+
     /**
      * Process a single beacon
-     * 
+     *
      * @param BeaconTile $beacon
      */
-    private function processBeacon(BeaconTile $beacon): void {
+    private function processBeacon(BeaconTile $beacon): void
+    {
         // Get beacon position
         $pos = $beacon->getPosition();
-        
+
         // Calculate beacon level (1-4) based on pyramid structure with caching
-        $level = BeaconPyramidCalculator::calculateLevel($beacon, $this->config);
-        
+        $level = BeaconPyramidCalculator::calculateLevel(
+            $beacon,
+            $this->config,
+        );
+
         // Update the beacon beam with configuration
         BeaconBeamRenderer::updateBeaconBeam($beacon, $level, $this->config);
-        
+
         // If beacon is not active (level 0), skip effects
         if ($level <= 0) {
             return;
         }
-        
+
         // Get beacon effects
         $primaryEffectId = $beacon->getPrimaryEffect();
         $secondaryEffectId = $beacon->getSecondaryEffect();
-        
+
         // Apply effects to players in range with configuration
-        BeaconEffects::applyEffectsInRange($pos, $primaryEffectId, $secondaryEffectId, $level, $this->config);
+        BeaconEffects::applyEffectsInRange(
+            $pos,
+            $primaryEffectId,
+            $secondaryEffectId,
+            $level,
+            $this->config,
+        );
     }
 }
